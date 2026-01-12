@@ -1,4 +1,4 @@
-# youtube-tv-channel
+# youtube-tv-station
 
 Turn any YouTube channel into a TV station.
 
