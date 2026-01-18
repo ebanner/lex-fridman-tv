@@ -1,6 +1,6 @@
 # lex-fridman-tv
 
-The Lex Fridman YouTube channel as a TV station.
+The [Lex Fridman YouTube channel](https://www.youtube.com/@lexfridman) as a TV station.
 
 ## Running
 
