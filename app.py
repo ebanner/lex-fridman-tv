@@ -11,8 +11,8 @@ load_dotenv()
 app = Flask(__name__)
 
 
-SUPABASE_URL = ("SUPABASE_URL")
-SUPABASE_KEY = ("SUPABASE_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 
 START_STRING = "2026-01-18T15:21:37.690583"
@@ -52,7 +52,6 @@ def get_video(offset):
     )
 
     video, = response.json()
-
     return video
 
 
@@ -63,10 +62,17 @@ def get_offset():
     return offset
 
 
+def get_video_offset(video, offset):
+    start_offset = video['end_offset'] - video['duration']
+    video_offset = offset - start_offset
+    return video_offset
+
+
 @app.get("/")
 def index():
     offset = get_offset()
     video = get_video(offset)
+    video_offset = get_video_offset(video, offset)
 
     html = """
 
@@ -94,7 +100,7 @@ def index():
     </body>
     </html>
 
-    """.replace("{{VIDEO_ID}}", video['video_id']).replace("{{OFFSET}}", str(offset))
+    """.replace("{{VIDEO_ID}}", video['video_id']).replace("{{OFFSET}}", str(video_offset))
 
     return Response(html, mimetype="text/html")
 
