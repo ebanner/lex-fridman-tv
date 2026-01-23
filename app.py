@@ -3,7 +3,7 @@ from datetime import datetime
 
 import requests
 from dotenv import load_dotenv
-from flask import Flask, Response
+from flask import Flask, Response, redirect
 
 load_dotenv()
 
@@ -102,7 +102,20 @@ def index():
 
     """.replace("{{VIDEO_ID}}", video['video_id']).replace("{{OFFSET}}", str(video_offset))
 
+    video_id = video['video_id']
+    url = f"https://www.youtube.com/watch?v={video_id}&t={video_offset}"
+
     return Response(html, mimetype="text/html")
+
+
+@app.get("/youtube")
+def youtube():
+    offset = get_offset()
+    video = get_video(offset)
+    video_offset = get_video_offset(video, offset)
+    video_id = video['video_id']
+    url = f"https://www.youtube.com/watch?v={video_id}&t={video_offset}"
+    return redirect(url)
 
 
 if __name__ == "__main__":
