@@ -1,41 +1,64 @@
+import os
+from datetime import datetime
+
+import requests
+from dotenv import load_dotenv
 from flask import Flask, Response
 
-from datetime import datetime
+load_dotenv()
 
 
 app = Flask(__name__)
+
+
+SUPABASE_URL = ("SUPABASE_URL")
+SUPABASE_KEY = ("SUPABASE_KEY")
 
 
 START_STRING = "2026-01-18T15:21:37.690583"
 
 START = datetime.fromisoformat(START_STRING)
 
-VIDEOS = [
-    {
-        "id": "14OPT6CcsH4",
-        "length": 13938
-    },
-    {
-        "id": "Z-FRe5AKmCU",
-        "length": 11179
-    }
-]
 
-TOTAL_LENGTH = sum(video['length'] for video in VIDEOS)
+def get_total_length():
+    response = requests.post(
+        f"{SUPABASE_URL}/rest/v1/rpc/total_youtube_duration",
+        headers={
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json",
+        }
+    )
 
+    total_length = response.json()
 
-def get_video_index(offset):
-    start = 0
-    for i, video in enumerate(VIDEOS):
-        if start <= offset <= start+video['length']:
-            return i
-
-        start += video_length['length']
+    return total_length
 
 
-def get_offset(video_length=13938):
+TOTAL_LENGTH = get_total_length()
+
+
+def get_video(offset):
+    response = requests.post(
+        f"{SUPABASE_URL}/rest/v1/rpc/get_video_by_offset",
+        headers={
+            "apikey": SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "target_offset": offset
+        }
+    )
+
+    video, = response.json()
+
+    return video
+
+
+def get_offset():
     elapsed = datetime.now() - START
-    seconds_since = elapsed.seconds
+    seconds_since = int(elapsed.total_seconds())
     offset = seconds_since % TOTAL_LENGTH
     return offset
 
@@ -43,9 +66,7 @@ def get_offset(video_length=13938):
 @app.get("/")
 def index():
     offset = get_offset()
-    video_index = get_video_index(offset)
-
-    video = VIDEOS[video_index]
+    video = get_video(offset)
 
     html = """
 
@@ -73,7 +94,7 @@ def index():
     </body>
     </html>
 
-    """.replace("{{VIDEO_ID}}", video['id']).replace("{{OFFSET}}", str(offset))
+    """.replace("{{VIDEO_ID}}", video['video_id']).replace("{{OFFSET}}", str(offset))
 
     return Response(html, mimetype="text/html")
 
